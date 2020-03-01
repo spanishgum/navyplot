@@ -98,7 +98,7 @@ def main(args):
     if args.video:
         frame_count = int((len(curve) - initial_offset) / update_step)
         ani = FuncAnimation(fig, update, fargs=(fig, ax), frames=frame_count, interval=100, blit=False)
-        ani.save(args.output + '.avi', writer=FFMpegWriter(fps=50), savefig_kwargs={'facecolor':bg})
+        ani.save(args.output + '.avi', writer=FFMpegWriter(fps=args.speed), savefig_kwargs={'facecolor':bg})
     else:
         plt.plot(dates, curve, color=fg)
         vlines(dates, curve)
@@ -111,4 +111,5 @@ if __name__ == '__main__':
     ap.add_argument('-d', '--directory', default='data', help='Data directory')
     ap.add_argument('-b', '--balance', type=int, default=0, help='Starting balance')
     ap.add_argument('-v', '--video', action='store_true', help='Make video instead of still image')
+    ap.add_argument('-s', '--speed', type=int, default=20, help='Frames per second')
     main(ap.parse_args())
