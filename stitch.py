@@ -57,6 +57,7 @@ def main(args):
     list(map(lambda label: label.set_color(fg), ax.get_xticklabels()))
     list(map(lambda label: label.set_color(fg), ax.get_yticklabels()))
 
+    ax.axes.set_xlim(dates.min(), dates.max())
     plt.gca().xaxis.set_major_formatter(mpl.dates.DateFormatter('%m/%y'))
     plt.gca().xaxis.set_major_locator(mpl.dates.MonthLocator(interval=6))
     plt.ylabel('Balance', color=fg)
@@ -80,30 +81,32 @@ def main(args):
         ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, fontfamily='monospace',
             verticalalignment='top', color=fg, bbox={'facecolor':'gray', 'alpha':0.95})
 
-    progress = tqdm(len(curve))
-    initial_offset = min(50, len(dates))
+    progress = None
     update_step = 5
-    p, = ax.plot([], [], 'cyan')
+    p, = ax.plot([], [], fg)
+
     def update(i, fig, ax):
-        _dates = dates[:int(i * update_step) + initial_offset]
-        _curve = curve[:int(i * update_step) + initial_offset]
+        bound = int((i + 1) * update_step)
+        _dates = dates[:bound]
+        _curve = curve[:bound]
         if i % 2 == 0:
             vlines(_dates, _curve)
         p.set_data(_dates, _curve)
-        p.axes.set_xlim(_dates[0], dates[-1])
+        p.axes.set_xlim(_dates.min(), _dates.max())
         p.axes.set_ylim(_curve.min(), _curve.max())
         progress.update(1)
         return p
 
     if args.video:
-        frame_count = int((len(curve) - initial_offset) / update_step)
+        frame_count = int(len(curve) / update_step)
+        progress = tqdm(total=frame_count, unit='frames')
         ani = FuncAnimation(fig, update, fargs=(fig, ax), frames=frame_count, interval=100, blit=False)
         ani.save(args.output + '.avi', writer=FFMpegWriter(fps=args.speed), savefig_kwargs={'facecolor':bg})
     else:
         plt.plot(dates, curve, color=fg)
         vlines(dates, curve)
         plt.savefig(args.output + '.png', facecolor=fig.get_facecolor())
-    progress.update(len(curve))
+    progress.close()
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
