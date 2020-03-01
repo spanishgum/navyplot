@@ -45,4 +45,8 @@ python stitch.py -v
 python stitch.py
 ```
 
+Example (avi converted to gif with ffmpeg):
+
+![wow so amazing](https://github.com/spanishgum/navyplot/raw/master/credit_balance.gif)
+
 
