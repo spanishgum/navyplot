@@ -50,7 +50,7 @@ def main(args):
     bg, fg = 'black', 'cyan'
     fig = plt.figure(facecolor=bg, edgecolor=fg)
     fig.patch.set_facecolor(bg)
-    fig.suptitle('Credit balance since {}'.format(dates[0].date()), color=fg)
+    fig.suptitle('Credit balance, {} to {}'.format(dates[0].date(), dates[-1].date()), color=fg)
     ax = plt.subplot(111, facecolor=bg)
     ax.tick_params(axis='y', which='both', color=fg, labelcolor=fg)
     list(map(lambda sid: ax.spines[sid].set_color(fg), ax.spines))
@@ -61,13 +61,18 @@ def main(args):
     plt.gca().xaxis.set_major_locator(mpl.dates.MonthLocator(interval=6))
     plt.ylabel('Balance', color=fg)
 
+    blue_line, red_line = None, None
     def vlines(_dates, _curve):
+        nonlocal blue_line, red_line
         mini, maxi = _curve.argmin(), _curve.argmax()
         minx, maxx = _dates[mini], _dates[maxi]
         miny, maxy = _curve[mini], _curve[maxi]
         minc, maxc = 'lime', 'red'
-        plt.axvline(x=minx, color=minc)
-        plt.axvline(x=maxx, color=maxc)
+        if red_line is not None:
+            blue_line.remove()
+            red_line.remove()
+        blue_line = plt.axvline(x=minx, color=minc)
+        red_line = plt.axvline(x=maxx, color=maxc)
         text = 'Low  : {} {:>6}$\nHigh : {} {:>6}$\nCurr : {} {:>6}$'.format(
             minx.date(), int(miny),
             maxx.date(), int(maxy),
@@ -76,12 +81,14 @@ def main(args):
             verticalalignment='top', color=fg, bbox={'facecolor':'gray', 'alpha':0.95})
 
     progress = tqdm(len(curve))
-    initial_offset = 10
+    initial_offset = min(50, len(dates))
+    update_step = 5
     p, = ax.plot([], [], 'cyan')
     def update(i, fig, ax):
-        _dates = dates[:i + initial_offset]
-        _curve = curve[:i + initial_offset]
-        vlines(_dates, _curve)
+        _dates = dates[:int(i * update_step) + initial_offset]
+        _curve = curve[:int(i * update_step) + initial_offset]
+        if i % 2 == 0:
+            vlines(_dates, _curve)
         p.set_data(_dates, _curve)
         p.axes.set_xlim(_dates[0], dates[-1])
         p.axes.set_ylim(_curve.min(), _curve.max())
@@ -89,7 +96,8 @@ def main(args):
         return p
 
     if args.video:
-        ani = FuncAnimation(fig, update, fargs=(fig, ax), frames=len(curve) - initial_offset, interval=100, blit=False)
+        frame_count = int((len(curve) - initial_offset) / update_step)
+        ani = FuncAnimation(fig, update, fargs=(fig, ax), frames=frame_count, interval=100, blit=False)
         ani.save(args.output + '.avi', writer=FFMpegWriter(fps=50), savefig_kwargs={'facecolor':bg})
     else:
         plt.plot(dates, curve, color=fg)
