@@ -64,11 +64,16 @@ def main(args):
     def vlines(_dates, _curve):
         mini, maxi = _curve.argmin(), _curve.argmax()
         minx, maxx = _dates[mini], _dates[maxi]
+        miny, maxy = _curve[mini], _curve[maxi]
         minc, maxc = 'lime', 'red'
         plt.axvline(x=minx, color=minc)
         plt.axvline(x=maxx, color=maxc)
-        plt.text(minx, _curve[mini], 'minimum {}'.format(minx.date()), color=minc)
-        plt.text(maxx, _curve[maxi], 'maximum {}'.format(maxx.date()), color=maxc)
+        text = 'Low  : {} {:>6}$\nHigh : {} {:>6}$\nCurr : {} {:>6}$'.format(
+            minx.date(), int(miny),
+            maxx.date(), int(maxy),
+            _dates[-1].date(), int(_curve[-1]))
+        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, fontfamily='monospace',
+            verticalalignment='top', color=fg, bbox={'facecolor':'gray', 'alpha':0.95})
 
     progress = tqdm(len(curve))
     initial_offset = 10
@@ -96,6 +101,6 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('-o', '--output', type=str, default='credit_balance', help='output file name')
     ap.add_argument('-d', '--directory', default='data', help='Data directory')
-    ap.add_argument('-b', '--balance', type=int, default=12500, help='Starting balance')
+    ap.add_argument('-b', '--balance', type=int, default=0, help='Starting balance')
     ap.add_argument('-v', '--video', action='store_true', help='Make video instead of still image')
     main(ap.parse_args())
