@@ -80,17 +80,22 @@ def main(args):
             _dates[-1].date(), int(_curve[-1]))
         ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, fontfamily='monospace',
             verticalalignment='top', color=fg, bbox={'facecolor':'gray', 'alpha':0.95})
+        return blue_line, red_line
 
     progress = None
     update_step = 5
     p, = ax.plot([], [], fg)
+    b, r = None, None
 
     def update(i, fig, ax):
+        if b:
+            b.remove()
+            r.remove()
         bound = int((i + 1) * update_step)
         _dates = dates[:bound]
         _curve = curve[:bound]
         if i % 2 == 0:
-            vlines(_dates, _curve)
+            b, r = vlines(_dates, _curve)
         p.set_data(_dates, _curve)
         p.axes.set_xlim(_dates.min(), _dates.max())
         p.axes.set_ylim(_curve.min(), _curve.max())
